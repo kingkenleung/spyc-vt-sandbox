@@ -1,161 +1,145 @@
 
-//https://pchen66.github.io/panolens.js/docs/
+//Panolens.js GitHub: https://pchen66.github.io/panolens.js/docs/
+//3D Vector Visualiser: https://www.mikemunkyulee.com/three-vv/
+//
 
-var panorama,
-    panorama2,
-    panorama3,
-		panorama4,
-		panorama5,
-		panorama6,
-		panorama7,
-		panorama8,
-    viewer,
-    container,
-    infospot,
-    progress,
-    progressElement;
+// Step 1: Define Scenes
+/**
+ * Object structure:
+ * path { String } The path to the image of the scene
+ * initialLookAtPosition { THREE.Vector3 }
+ * infospot { Object } Settings for infospot
+ *  position { Array } 3D coordinates of the infospot
+ *  hoverText { String } Text to show when the infospot is hovered
+ *  link { String } The link the infospot will link to
+ *  icon { String } The source of the icon of the infospot
+ * sceneLinkage { Array }
+ * 	id { int }
+ * 	direction { Object } 3D coordinates of the arrow (equivalent to infospot)
+ */
 
-//Progress Bar
-progressElement = document.getElementById("progress");
+/* 
+
+Three.Vector3(x,y,z)
+
+	Forward is positive
+					^
+					|
+					|
+x: along axis of lens
+					|
+					|
+					v
+ Backward is negative
+
+y: vertical axis
+
+Left is positive <--- z: perpendicular to axis of lens ---> Right is negative
+
+12 o'clock: (1500,0,0)
+9 o'clock: (0,0,1500)
+6 o'clock: (-1500,0,0)
+3 o'clock: (0,0,-1500)
+*/
+
+const scenes = [
+  {
+    path: 'new_scenes/lt_stair_2.JPG',
+    
+    initialLookAtPosition: new THREE.Vector3(1500, 0, 0),
+    infospot: {
+      position: [300, 400, 500],
+      hoverText: 'Shatin Pui Ying College',
+      link: 'https://www2.pyc.edu.hk/index.php',
+      icon: PANOLENS.DataImage.Info
+    },
+		sceneLinkage: [
+			{id: 1, direction: new THREE.Vector3(0,0,-1500)},
+		]
+  },
+
+	{
+    path: 'new_scenes/lt_stair_1.JPG',
+    initialLookAtPosition: new THREE.Vector3(-5, 0, 0),
+    infospot: {
+      position: [300, 400, 500],
+      hoverText: 'Shatin Pui Ying College',
+      link: 'https://www2.pyc.edu.hk/index.php',
+      icon: PANOLENS.DataImage.Info
+    } ,
+		sceneLinkage: [
+			{id: 0, direction: new THREE.Vector3(-1000, -300, -100)},
+			{id: 0, direction: new THREE.Vector3(1000, -300, -100)},
+		]
+  }
+  // Other scenes goes here
+]
+
+const progressElement = document.getElementById("progress");
+const container = document.getElementById('container');
+const viewer = new PANOLENS.Viewer({ output: 'console',container });
+
+// Progress Bar Starts
 function onEnter(event) {
-    progressElement.style.width = 0;
-    progressElement.classList.remove('finish');
+  progressElement.style.width = 0;
+  progressElement.classList.remove('finish');
 }
-
 function onProgress(event) {
-    progress = event.progress.loaded / event.progress.total * 100;
-    progressElement.style.width = progress + '%';
-    if (progress === 100) {
-        progressElement.classList.add('finish');
-    }
+  progress = event.progress.loaded / event.progress.total * 100;
+  progressElement.style.width = progress + '%';
+  if (progress === 100) {
+      progressElement.classList.add('finish');
+  }
+}
+// Progress Bar Ends
+
+/**
+ * Function to set settings of a panorama
+ */
+function setPanorama(path, initialLookAt) {
+  console.log('Setting panorama');
+  let panorama = new PANOLENS.ImagePanorama(path);
+  panorama.addEventListener('enter-fade-start', () => {
+		viewer.tweenControlCenter(initialLookAt, 1);
+	});
+  panorama.addEventListener('progress', onProgress);
+	panorama.addEventListener('enter', onEnter);
+	console.log('DONE!')
+  return panorama;
+}
+/**
+ * Function to set settings of a infospot
+ */
+function setInfospot(position, hoverText, link, icon) {
+  console.log('Setting infospot');
+  let infospot = new PANOLENS.Infospot(100, icon);
+  infospot.position.set(position[0], position[1], position[2]);
+  infospot.addHoverText(hoverText);
+  infospot.addEventListener('click', () => {
+    window.open(link);
+  });
+  console.log('DONE!')
+  return infospot;
+}
+
+const panorama = []
+
+for (let i = 0; i < scenes.length; i++) {
+  let { path, initialLookAtPosition, infospot: infospotSettings } = scenes[i];
+  //let panorama = setPanorama(path, initialLookAtPosition);
+	panorama.push(setPanorama(path, initialLookAtPosition));
+  let infospot = setInfospot(infospotSettings.position, infospotSettings.hoverText, infospotSettings.link, infospotSettings.icon);
+
+  panorama[i].add(infospot);
+  viewer.add(panorama[i]);
+} 
+
+
+for (let i = 0; i < scenes.length; i++) {
+	for (let j = 0; j < scenes[i].sceneLinkage.length; j++) {
+			panorama[i].link(panorama[scenes[i].sceneLinkage[j].id], scenes[i].sceneLinkage[j].direction)
+	}
 }
 
 
-var lookAtPositions = [
-    new THREE.Vector3(4871.39, 1088.07, -118.41),
-    new THREE.Vector3(4871.39, 1088.07, -118.41),
-    new THREE.Vector3(4871.39, 1088.07, -118.41)
-];
-
-var infospotPositions = [
-    new THREE.Vector3(2500, -300, -100),
-    new THREE.Vector3(-2500, -300, -100),
-];
-
-container = document.querySelector('#container');
-
-//scene 1
-panorama = new PANOLENS.ImagePanorama('scenes/playground1.JPG');
-panorama.addEventListener('enter-fade-start', function () {
-    viewer.tweenControlCenter(lookAtPositions[0], 0);
-});
-panorama.addEventListener('progress', onProgress);
-panorama.addEventListener('enter', onEnter);
-
-//scene 2
-panorama2 = new PANOLENS.ImagePanorama('scenes/playground2.JPG');
-panorama2.addEventListener('enter-fade-start', function () {
-    viewer.tweenControlCenter(lookAtPositions[1], 0);
-});
-panorama2.addEventListener('progress', onProgress);
-panorama2.addEventListener('enter', onEnter);
-
-//scene 3
-panorama3 = new PANOLENS.ImagePanorama('scenes/playground3.JPG');
-panorama3.addEventListener('enter-fade-start', function () {
-    viewer.tweenControlCenter(lookAtPositions[2], 0);
-});
-panorama3.addEventListener('progress', onProgress);
-panorama3.addEventListener('enter', onEnter);
-
-//scene 4
-panorama4 = new PANOLENS.ImagePanorama('scenes/playground4.JPG');
-panorama4.addEventListener('enter-fade-start', function () {
-    viewer.tweenControlCenter(lookAtPositions[2], 0);
-});
-panorama4.addEventListener('progress', onProgress);
-panorama4.addEventListener('enter', onEnter);
-
-//scene 5
-panorama5 = new PANOLENS.ImagePanorama('scenes/playground5.JPG');
-panorama5.addEventListener('enter-fade-start', function () {
-    viewer.tweenControlCenter(lookAtPositions[2], 0);
-});
-panorama5.addEventListener('progress', onProgress);
-panorama5.addEventListener('enter', onEnter);
-
-//scene 6
-panorama6 = new PANOLENS.ImagePanorama('scenes/playground6.JPG');
-panorama6.addEventListener('enter-fade-start', function () {
-    viewer.tweenControlCenter(lookAtPositions[2], 0);
-});
-panorama6.addEventListener('progress', onProgress);
-panorama6.addEventListener('enter', onEnter);
-
-//scene 7
-panorama7 = new PANOLENS.ImagePanorama('scenes/playground7.JPG');
-panorama5.addEventListener('enter-fade-start', function () {
-    viewer.tweenControlCenter(lookAtPositions[2], 0);
-});
-panorama7.addEventListener('progress', onProgress);
-panorama7.addEventListener('enter', onEnter);
-
-//scene 8
-panorama8 = new PANOLENS.ImagePanorama('scenes/playground8.JPG');
-panorama8.addEventListener('enter-fade-start', function () {
-    viewer.tweenControlCenter(lookAtPositions[2], 0);
-});
-panorama8.addEventListener('progress', onProgress);
-panorama8.addEventListener('enter', onEnter);
-
-//Linkage from scene to scene
-//0: go forth
-//1: go back
-panorama.link(panorama2, infospotPositions[0]);
-panorama2.link(panorama, infospotPositions[1]);
-
-panorama2.link(panorama3, infospotPositions[0]);
-panorama3.link(panorama2, infospotPositions[1]);
-
-panorama3.link(panorama4, infospotPositions[0]);
-panorama4.link(panorama3, infospotPositions[1]);
-
-panorama4.link(panorama5, infospotPositions[0]);
-panorama5.link(panorama4, infospotPositions[1]);
-
-panorama5.link(panorama6, infospotPositions[0]);
-panorama6.link(panorama5, infospotPositions[1]);
-
-panorama6.link(panorama7, infospotPositions[0]);
-panorama7.link(panorama6, infospotPositions[1]);
-
-panorama7.link(panorama8, infospotPositions[0]);
-panorama8.link(panorama7, infospotPositions[1]);
-
-//Infospots Setting
-infospot = new PANOLENS.Infospot(700, PANOLENS.DataImage.Info);
-infospot.position.set(0, 500, -5000);
-infospot.addHoverText("Shatin Pui Ying College");
-infospot.addEventListener('click', function () {
-    window.open("https://www2.pyc.edu.hk/index.php");
-});
-
-panorama.add(infospot);
-
-
-
-
-
-
-viewer = new PANOLENS.Viewer({ output: 'console', container: container });
-viewer.add(
-	panorama, 
-	panorama2, 
-	panorama3, 
-	panorama4, 
-	panorama5,
-	panorama6,
-	panorama7, 
-	panorama8
-);
 

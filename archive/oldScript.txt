@@ -1,0 +1,86 @@
+//Step 1: Define Scenes
+// const pano = [];
+
+// let viewer,
+//     container,
+//     infospot,
+//     progress,
+// 		progressElement;
+
+
+// //The Virtual Tour Starts here
+
+// //Progress Bar Starts
+
+// progressElement = document.getElementById("progress");
+// function onEnter(event) {
+//     progressElement.style.width = 0;
+//     progressElement.classList.remove('finish');
+// }
+
+// function onProgress(event) {
+//     progress = event.progress.loaded / event.progress.total * 100;
+//     progressElement.style.width = progress + '%';
+//     if (progress === 100) {
+//         progressElement.classList.add('finish');
+//     }
+// }
+
+// //Progress Bar Ends
+
+// //Define LookAtPosition
+// //3D Vector Visualiser: https://www.mikemunkyulee.com/three-vv/
+// var lookAtPositions = [
+//     new THREE.Vector3(2, 0, 2),
+// ];
+
+// container = document.querySelector('#container');
+
+// //Set Scenes
+
+// function  set_scene (path, initial_lookat)  {
+// 	console.log('setting scenes....')
+// 	pano[0] = new PANOLENS.ImagePanorama(path);
+// 	pano[0].addEventListener('enter-fade-start', function () {
+// 		viewer.tweenControlCenter(initial_lookat, 1);
+// 	});
+// 	pano[0].addEventListener('progress', onProgress);
+// 	pano[0].addEventListener('enter', onEnter);
+// 	console.log('DONE!')
+// }
+
+
+// // set_scene("new_scenes/first_floor_2.JPG", lookAtPositions[0]);
+// //set_scene("new_scenes/first_floor_2.JPG", lookAtPositions[0]);
+
+// /* //scene 1
+// panorama = new PANOLENS.ImagePanorama('scenes/playground1.JPG');
+// panorama.addEventListener('enter-fade-start', function () {
+//     viewer.tweenControlCenter(lookAtPositions[0], 0);
+// });
+// panorama.addEventListener('progress', onProgress);
+// panorama.addEventListener('enter', onEnter); */
+
+
+// //Linkage from scene to scene
+
+// /* pano[0].link(pano[1], infospotPositions[0]);
+// pano[1].link(pano[0], infospotPositions[0]) */
+
+// //Infospots Setting
+// infospot = new PANOLENS.Infospot(100, PANOLENS.DataImage.Info);
+// infospot.position.set(300, 400, 500);
+// infospot.addHoverText("Shatin Pui Ying College");
+// infospot.addEventListener('click', function () {
+//     window.open("https://www2.pyc.edu.hk/index.php");
+// });
+
+// pano[0].add(infospot);
+
+// viewer = new PANOLENS.Viewer({ output: 'console', container: container });
+// viewer.add(
+// 	pano[0],
+// 	//pano[1]
+// );
+
+//====
