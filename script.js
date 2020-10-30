@@ -8,7 +8,7 @@
  * Object structure:
  * path { String } The path to the image of the scene
  * initialLookAtPosition { THREE.Vector3 }
- * infospot { Object } Settings for infospot
+ * infospot { Array } Settings for infospots
  *  position { Array } 3D coordinates of the infospot
  *  hoverText { String } Text to show when the infospot is hovered
  *  link { String } The link the infospot will link to
@@ -47,12 +47,21 @@ const scenes = [
     path: 'new_scenes/lt_stair_2.JPG',
     
     initialLookAtPosition: new THREE.Vector3(1500, 0, 0),
-    infospot: {
-      position: [300, 400, 500],
-      hoverText: 'Shatin Pui Ying College',
-      link: 'https://www2.pyc.edu.hk/index.php',
-      icon: PANOLENS.DataImage.Info
-    },
+    infospots: [
+      {
+        position: [300, 0, 500],
+        hoverText: 'Shatin Pui Ying College',
+        link: 'https://www2.pyc.edu.hk/index.php',
+        icon: PANOLENS.DataImage.Info
+      },
+			{
+        position: [300, 0, -500],
+        hoverText: 'Shatin Pui Ying College 2',
+        link: 'https://www2.pyc.edu.hk/index.php',
+        icon: PANOLENS.DataImage.VideoPlay
+      },
+
+    ],
 		sceneLinkage: [
 			{id: 1, direction: new THREE.Vector3(0,0,-1500)},
 		]
@@ -61,12 +70,12 @@ const scenes = [
 	{
     path: 'new_scenes/lt_stair_1.JPG',
     initialLookAtPosition: new THREE.Vector3(-5, 0, 0),
-    infospot: {
+    infospots: [{
       position: [300, 400, 500],
       hoverText: 'Shatin Pui Ying College',
       link: 'https://www2.pyc.edu.hk/index.php',
       icon: PANOLENS.DataImage.Info
-    } ,
+    }] ,
 		sceneLinkage: [
 			{id: 0, direction: new THREE.Vector3(-1000, -300, -100)},
 			{id: 0, direction: new THREE.Vector3(1000, -300, -100)},
@@ -78,6 +87,28 @@ const scenes = [
 const progressElement = document.getElementById("progress");
 const container = document.getElementById('container');
 const viewer = new PANOLENS.Viewer({ output: 'console',container });
+
+/**
+ * Handler function for menu change
+ */
+async function onMenuChange(event) {
+  // Get the current control method
+  let controlType = viewer.getControlId();
+
+  if (event.method !== 'enableControl' || !window.DeviceOrientationEvent || controlType !== 'device-orientation') {
+    return;
+  }
+  
+  // Request permission for using the orientation sensor in iOS.
+  
+  try {
+    await window.DeviceOrientationEvent.requestPermission();
+  } catch (error) {
+    // TODO: Add error handling
+  }
+}
+
+viewer.widget.addEventListener('panolens-viewer-handler', onMenuChange);
 
 // Progress Bar Starts
 function onEnter(event) {
@@ -108,36 +139,40 @@ function setPanorama(path, initialLookAt) {
   return panorama;
 }
 /**
- * Function to set settings of a infospot
+ * Function to set settings of infospots
  */
-function setInfospot(position, hoverText, link, icon) {
-  console.log('Setting infospot');
-  let infospot = new PANOLENS.Infospot(100, icon);
-  infospot.position.set(position[0], position[1], position[2]);
-  infospot.addHoverText(hoverText);
-  infospot.addEventListener('click', () => {
-    window.open(link);
+function addInfospots(infospots, panorama) {
+  infospots.forEach((infospotSettings) => {
+    console.log('Setting infospot');
+    let { position, link, hoverText, icon } = infospotSettings;
+    let infospot = new PANOLENS.Infospot(100, icon);
+
+    infospot.position.set(position[0], position[1], position[2]);
+    infospot.addHoverText(hoverText);
+    infospot.addEventListener('click', () => {
+      window.open(link);
+    });
+    panorama.add(infospot);
+    console.log('DONE!');
   });
-  console.log('DONE!')
-  return infospot;
 }
 
-const panorama = []
+const panoramas = []
 
 for (let i = 0; i < scenes.length; i++) {
-  let { path, initialLookAtPosition, infospot: infospotSettings } = scenes[i];
-  //let panorama = setPanorama(path, initialLookAtPosition);
-	panorama.push(setPanorama(path, initialLookAtPosition));
-  let infospot = setInfospot(infospotSettings.position, infospotSettings.hoverText, infospotSettings.link, infospotSettings.icon);
+  let { path, initialLookAtPosition, infospots } = scenes[i];
+  let panorama = setPanorama(path, initialLookAtPosition);
 
-  panorama[i].add(infospot);
-  viewer.add(panorama[i]);
+	panoramas.push(panorama);
+
+  addInfospots(infospots, panorama);
+  viewer.add(panorama);
 } 
 
 
 for (let i = 0; i < scenes.length; i++) {
 	for (let j = 0; j < scenes[i].sceneLinkage.length; j++) {
-			panorama[i].link(panorama[scenes[i].sceneLinkage[j].id], scenes[i].sceneLinkage[j].direction)
+			panoramas[i].link(panoramas[scenes[i].sceneLinkage[j].id], scenes[i].sceneLinkage[j].direction)
 	}
 }
 
